@@ -1,27 +1,6 @@
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
-
-const activities = 
-  {
-    id: "1",
-    userId: "1",
-    date: '19.11.2023',
-    wakeUpTime: '10:00',
-    didYouEatHealthy: true,
-    didYouDoSport: true,
-    litresOfDrinkingWater: '2',
-    todoList: [],
-    notes: []
-  }
-
-const users = [
-  {
-    id: "1",
-    firstName: 'Enes',
-    lastName: 'Özkurt',
-    activities
-  }
-];
+const { ApolloServer } =  require('@apollo/server');
+const { startStandaloneServer } = require('@apollo/server/standalone');
+const { users, activities } = require('./data');
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -34,12 +13,13 @@ const typeDefs = `#graphql
     id: ID!
     firstName: String!
     lastName: String!
-    activities: Activity!
+    activities: [Activity]!
   }
 
   type Activity {
     id: ID!
     userId: ID!
+    user: User!
     date: String!
     wakeUpTime: String
     didYouEatHealthy: Boolean
@@ -64,7 +44,9 @@ const typeDefs = `#graphql
   # case, the "users" query returns an array of zero or more Users (defined above).
   type Query {
     users: [User!]!
-    activities: Activity!
+    user(id: ID!): User!
+    activities: [Activity]!
+    activity(date: String!): Activity!
   }
 `;
 
@@ -73,8 +55,26 @@ const typeDefs = `#graphql
 const resolvers = {
   Query: {
     users: () => users,
-    activities: () => activities
+    user: (parent, args) => {
+      const data = users.find((user) => user.id === args.id);
+      return data;
+    },
+    activities: () => activities,
+    activity: (parent, args) => {
+      const data = activities.find((activity) => activity.date === args.date)
+      return data;
+    }
   },
+  Activity: {
+    user: (parent) => {
+      return users.find(user => user.id === parent.userId)
+    }
+  },
+  User: {
+    activities: (parent) => {
+      return activities.filter(activity => activity.userId === parent.id)
+    }
+  }
 };
 
 // The ApolloServer constructor requires two parameters: your schema
@@ -88,8 +88,13 @@ const server = new ApolloServer({
 //  1. creates an Express app
 //  2. installs your ApolloServer instance as middleware
 //  3. prepares your app to handle incoming requests
-const { url } = await startStandaloneServer(server, {
+startStandaloneServer(server, {
   listen: { port: 4000 },
+}).then(({ url }) => {
+  console.log(`🚀  Server ready at: ${url}`);
+}).catch(error => {
+  console.error("Server start error:", error);
 });
-
-console.log(`🚀  Server ready at: ${url}`);
+// const { url } = await startStandaloneServer(server, {
+//   listen: { port: 4000 },
+// });
