@@ -1,6 +1,7 @@
 const { ApolloServer } =  require('@apollo/server');
 const { startStandaloneServer } = require('@apollo/server/standalone');
 const { users, activities } = require('./data');
+const { nanoid } = require('nanoid');
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -13,7 +14,7 @@ const typeDefs = `#graphql
     id: ID!
     firstName: String!
     lastName: String!
-    activities: [Activity]!
+    activities(filter: String): [Activity]!
   }
 
   type Activity {
@@ -34,7 +35,17 @@ const typeDefs = `#graphql
     todo: String
   }
 
+  input TodoListInput {
+    id: ID!
+    todo: String
+  }
+
   type Notes {
+    id: ID!
+    note: String
+  }
+  
+  input NotesInput {
     id: ID!
     note: String
   }
@@ -48,11 +59,30 @@ const typeDefs = `#graphql
     activities: [Activity]!
     activity(date: String!): Activity!
   }
+
+  type Mutation {
+    register(firstName: String!, lastName: String!, email: String!, password: String!): User!
+    createActivity(userId: ID!, date: String!, wakeUpTime: String, didYouEatHealthy: Boolean, didYouDoSport: Boolean, litresOfDrinkingWater: Float, todoList: [TodoListInput!], notes: [NotesInput!]): Activity!
+  }
 `;
 
 // Resolvers define how to fetch the types defined in your schema.
 // This resolver retrieves books from the "users" array above.
 const resolvers = {
+  Mutation: {
+    register: (parent, { firstName, lastName }) => {
+      const newUser = { id: nanoid(), firstName, lastName }
+      users.push(newUser)
+
+      return newUser;
+    },
+    createActivity: (parent, { userId, date, wakeUpTime, didYouEatHealthy, didYouDoSport, litresOfDrinkingWater, todoList, notes }) => {
+      const newActivity = { id: nanoid(), userId, date, wakeUpTime, didYouEatHealthy, didYouDoSport, litresOfDrinkingWater, todoList: todoList?.map(item => ({ id: nanoid, todo: item.todo })), notes: notes?.map(item => ({ id: nanoid, note: item.note })) }
+      activities.push(newActivity);
+
+      return newActivity;
+    }
+  },
   Query: {
     users: () => users,
     user: (parent, args) => {
