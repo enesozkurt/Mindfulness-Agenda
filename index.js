@@ -17,6 +17,19 @@ const typeDefs = `#graphql
     activities(filter: String): [Activity]!
   }
 
+  input CreateUserInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+    password: String!
+  }
+
+  input UpdateUserInput {
+    firstName: String
+    lastName: String
+    password: String
+  }
+
   type Activity {
     id: ID!
     userId: ID!
@@ -30,12 +43,33 @@ const typeDefs = `#graphql
     notes: [Notes!]
   }
 
+  input CreateActivityInput {
+    userId: ID!
+    date: String!
+    wakeUpTime: String
+    didYouEatHealthy: Boolean
+    didYouDoSport: Boolean
+    litresOfDrinkingWater: Float
+    todoList: [CreateTodoInput!]
+    notes: [CreateNoteInput!]
+  }
+
+  input UpdateActivityInput {
+    date: String
+    wakeUpTime: String
+    didYouEatHealthy: Boolean
+    didYouDoSport: Boolean
+    litresOfDrinkingWater: Float
+    todoList: [CreateTodoInput!]
+    notes: [CreateNoteInput!]
+  }
+
   type TodoList {
     id: ID!
     todo: String
   }
 
-  input TodoListInput {
+  input CreateTodoInput {
     id: ID!
     todo: String
   }
@@ -45,7 +79,7 @@ const typeDefs = `#graphql
     note: String
   }
   
-  input NotesInput {
+  input CreateNoteInput {
     id: ID!
     note: String
   }
@@ -61,8 +95,10 @@ const typeDefs = `#graphql
   }
 
   type Mutation {
-    register(firstName: String!, lastName: String!, email: String!, password: String!): User!
-    createActivity(userId: ID!, date: String!, wakeUpTime: String, didYouEatHealthy: Boolean, didYouDoSport: Boolean, litresOfDrinkingWater: Float, todoList: [TodoListInput!], notes: [NotesInput!]): Activity!
+    register(data: CreateUserInput!): User!
+    createActivity(data: CreateActivityInput!): Activity!
+    updateActivity(id: ID!, data: UpdateActivityInput!): Activity!
+    updateUser(id: ID!, data: UpdateUserInput!): User! 
   }
 `;
 
@@ -70,17 +106,45 @@ const typeDefs = `#graphql
 // This resolver retrieves books from the "users" array above.
 const resolvers = {
   Mutation: {
-    register: (parent, { firstName, lastName }) => {
-      const newUser = { id: nanoid(), firstName, lastName }
+    register: (parent, { data }) => {
+      const newUser = { id: nanoid(), ...data }
       users.push(newUser)
 
       return newUser;
     },
-    createActivity: (parent, { userId, date, wakeUpTime, didYouEatHealthy, didYouDoSport, litresOfDrinkingWater, todoList, notes }) => {
-      const newActivity = { id: nanoid(), userId, date, wakeUpTime, didYouEatHealthy, didYouDoSport, litresOfDrinkingWater, todoList: todoList?.map(item => ({ id: nanoid, todo: item.todo })), notes: notes?.map(item => ({ id: nanoid, note: item.note })) }
+    updateUser: (parent, { id, data }) => {
+      const user_index = users.findIndex(user => user.id === id)
+
+      if (user_index === -1) {
+        throw new Error('User not found!')
+      }
+
+      const updatedUser = users[user_index] = {
+        ...users[user_index],
+        ...data
+      }
+
+      return updatedUser;
+    },
+    createActivity: (parent, { data }) => {
+      const newActivity = { id: nanoid(), ...data }
       activities.push(newActivity);
 
       return newActivity;
+    },
+    updateActivity: (parent, { id, data}) => {
+      const activity_index = activities.findIndex(activity => activity.id === id)
+
+      if (activity_index === -1) {
+        throw new Error('Activity not found!')
+      }
+
+      const updatedActivitiy = activities[activity_index] = {
+        ...activities[activity_index],
+        ...data
+      }
+
+      return updatedActivitiy;
     }
   },
   Query: {
