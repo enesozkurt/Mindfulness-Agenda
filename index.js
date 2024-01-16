@@ -84,6 +84,10 @@ const typeDefs = `#graphql
     note: String
   }
 
+  type DeleteAllOutput {
+    count: Int!
+  }
+
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "users" query returns an array of zero or more Users (defined above).
@@ -98,7 +102,9 @@ const typeDefs = `#graphql
     register(data: CreateUserInput!): User!
     createActivity(data: CreateActivityInput!): Activity!
     updateActivity(id: ID!, data: UpdateActivityInput!): Activity!
-    updateUser(id: ID!, data: UpdateUserInput!): User! 
+    updateUser(id: ID!, data: UpdateUserInput!): User!
+    deleteActivity(id: ID!): Activity!
+    deleteAllActivities: DeleteAllOutput!
   }
 `;
 
@@ -145,6 +151,26 @@ const resolvers = {
       }
 
       return updatedActivitiy;
+    },
+    deleteActivity: (parent, { id }) => {
+      const activity_index = activities.findIndex(activity => activity.id === id);
+
+      if (activity_index === -1) {
+        throw new Error('Activity not found!')
+      }
+
+      const deletedActivitiy = activities[activity_index]
+      activities.splice(activity_index, 1)
+
+      return deletedActivitiy
+    },
+    deleteAllActivities: () => {
+      const length = activities.length
+      activities.splice(0, length)
+
+      return {
+        count: length
+      }
     }
   },
   Query: {
