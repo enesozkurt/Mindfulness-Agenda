@@ -3,8 +3,8 @@ const { createPubSub, createSchema, createYoga } = require('graphql-yoga')
 
 const { users, activities } = require('./data');
 const { nanoid } = require('nanoid');
- 
-const pubSub = createPubSub()
+
+const pubSub = require('./pubsub')
 
 const yoga = createYoga({
   schema: createSchema({
@@ -118,15 +118,15 @@ const yoga = createYoga({
   resolvers: {
     Subscription: {
       activityCreated: {
-        subscribe: () => pubSub.subscribe('activityCreated'),
+        subscribe: () => pubSub.asyncIterator('activityCreated'),
         resolve: payload => payload
       },
       activityUpdated: {
-        subscribe: () => pubSub.subscribe('activityUpdated'),
+        subscribe: () => pubSub.asyncIterator('activityUpdated'),
         resolve: payload => payload
       },
       activityDeleted: {
-        subscribe: () => pubSub.subscribe('activityDeleted'),
+        subscribe: () => pubSub.asyncIterator('activityDeleted'),
         resolve: payload => payload
       }
     },
