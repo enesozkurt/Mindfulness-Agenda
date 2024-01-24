@@ -1,0 +1,78 @@
+type Activity {
+  id: ID!
+  userId: ID!
+  user: User!
+  date: String!
+  wakeUpTime: String
+  didYouEatHealthy: Boolean
+  didYouDoSport: Boolean
+  litresOfDrinkingWater: Float
+  todoList: [TodoList!]
+  notes: [Notes!]
+}
+
+input CreateActivityInput {
+  userId: ID!
+  date: String!
+  wakeUpTime: String
+  didYouEatHealthy: Boolean
+  didYouDoSport: Boolean
+  litresOfDrinkingWater: Float
+  todoList: [CreateTodoInput!]
+  notes: [CreateNoteInput!]
+}
+
+input UpdateActivityInput {
+  date: String
+  wakeUpTime: String
+  didYouEatHealthy: Boolean
+  didYouDoSport: Boolean
+  litresOfDrinkingWater: Float
+  todoList: [CreateTodoInput!]
+  notes: [CreateNoteInput!]
+}
+
+type TodoList {
+  id: ID!
+  todo: String
+}
+
+input CreateTodoInput {
+  id: ID!
+  todo: String
+}
+
+type Notes {
+  id: ID!
+  note: String
+}
+
+input CreateNoteInput {
+  id: ID!
+  note: String
+}
+
+type DeleteAllOutput {
+  count: Int!
+}
+
+type Subscription {
+  activityCreated: Activity!
+  activityUpdated: Activity!
+  activityDeleted: Activity!
+}
+
+# The "Query" type is special: it lists all of the available queries that
+# clients can execute, along with the return type for each. In this
+# case, the "users" query returns an array of zero or more Users (defined above).
+type Query {
+  activities: [Activity]!
+  activity(date: String!): Activity!
+}
+
+type Mutation {
+  createActivity(data: CreateActivityInput!): Activity!
+  updateActivity(id: ID!, data: UpdateActivityInput!): Activity!
+  deleteActivity(id: ID!): Activity!
+  deleteAllActivities: DeleteAllOutput!
+}

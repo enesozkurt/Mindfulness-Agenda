@@ -1,0 +1,32 @@
+type User {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  activities(filter: String): [Activity]!
+}
+
+input CreateUserInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  firstName: String
+  lastName: String
+  password: String
+}
+
+# The "Query" type is special: it lists all of the available queries that
+# clients can execute, along with the return type for each. In this
+# case, the "users" query returns an array of zero or more Users (defined above).
+type Query {
+  users: [User!]!
+  user(id: ID!): User!
+}
+
+type Mutation {
+  register(data: CreateUserInput!): User!
+  updateUser(id: ID!, data: UpdateUserInput!): User!
+}
